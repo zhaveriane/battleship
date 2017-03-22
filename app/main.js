@@ -66,14 +66,14 @@ Leap.loop({ hand: function(hand) {
 
     // First, determine if grabbing pose or not
     isGrabbing = hand.grabStrength > grabThreshold;
-    console.log(hand.grabStrength);
 
     // Grabbing, but no selected ship yet. Look for one.
     // Update grabbedShip/grabbedOffset if the user is hovering over a ship
     if (!grabbedShip && isGrabbing) {
       grabbedShip = getIntersectingShipAndOffset(cursorPosition);
       // if (grabbedShip) {
-      //   grabbedRollOffset = hand.roll() + grabbedShip.ship.getShipRotation();
+      //   grabbedRollOffset = hand.roll() + grabbedShip.getShipRotation();
+      //   console.log("roll offset: " + grabbedRollOffset);
       // }
     }
 
@@ -146,7 +146,6 @@ Leap.loop({ hand: function(hand) {
 var processSpeech = function(transcript) {
   // Helper function to detect if any commands appear in a string
   var userSaid = function(str, commands) {
-    console.log(commands);
     for (var i = 0; i < commands.length; i++) {
       if (str.indexOf(commands[i]) > -1)
         return true;
