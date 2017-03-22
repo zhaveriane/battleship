@@ -280,6 +280,9 @@ var registerPlayerShot = function() {
           else if (numberPlayerMisses >= 4) {
             message = "Glad you finally hit one, loser.";
           }
+          else {
+            message = "You hit something, human.";
+          }
         }
         numberPlayerMisses = 0;
 
@@ -304,6 +307,9 @@ var registerPlayerShot = function() {
           }
           else if (numberPlayerHits >= 4) {
             message = "The end of an era. I'm barely hanging on.";
+          }
+          else {
+            message = "You missed.";
           }
         }
         numberPlayerHits = 0;
@@ -386,6 +392,20 @@ var registerCpuShot = function(playerResponse) {
       else if (numberCPUHits >= 4) {
         message = "I'm gonna beat you so fast at this rate";
       }
+      else {
+        if (numberCPUMisses === 2) {
+          message = "This is the start of something great. I'm gonna go on a run.";
+        } 
+        else if (numberCPUMisses === 3) {
+          message = "Okay, I can still come back from this.";
+        }
+        else if (numberCPUMisses >= 4) {
+          message = "I'm down, but not out!";
+        }
+        else {
+          message = "You bet I hit something, there's more where that came from.";
+        }
+      }
     } else {
       var shipName = result.sunkShip.get('type');
       numberCPUMisses++;
@@ -398,6 +418,20 @@ var registerCpuShot = function(playerResponse) {
       }
       else if (numberCPUMisses >= 4) {
         message = "Haven't you won yet? It can't get much worse for me.";
+      }
+      else {
+        if (numberCPUHits === 2) {
+          message = "I had a good streak.";
+        } 
+        else if (numberCPUHits === 3) {
+          message = "I was bound to miss eventually.";
+        }
+        else if (numberCPUHits >= 4) {
+          message = "OK, I missed, but you're totally gonna lose.";
+        }
+        else {
+          message = "Happens, I'll get it next time.";
+        }
       }
     }
   }
