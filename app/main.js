@@ -40,6 +40,12 @@ var grabbedOffset = [0, 0];
 var isGrabbing = false;
 var grabThreshold = 0.9;
 
+var numberCPUMisses = 0;
+var numberCPUHits = 0;
+
+var numberPlayerMisses = 0;
+var numberPlayerHits = 0;
+
 // MAIN GAME LOOP
 // Called every time the Leap provides a new frame of data
 Leap.loop({ hand: function(hand) {
@@ -222,12 +228,86 @@ var registerPlayerShot = function() {
     // Sunk ship
     else if (result.sunkShip) {
       var shipName = result.sunkShip.get('type');
-      message = "You sunk my "+shipName+"!";
+      
+      numberPlayerHits++;
+      if (numberPlayerHits === 2) {
+        message = "Two hits in a row means nothing, fool.";
+      } 
+      else if (numberPlayerHits === 3) {
+        message = "Impressive. Three hits in a row. ";
+      }
+      else if (numberPlayerHits >= 4) {
+        message = "This is unfair, you must be cheating. ";
+      }
+      else {
+        if (numberPlayerMisses === 2) {
+          message = "Guess that wasn't much of a losing streak. ";
+        } 
+        else if (numberPlayerMisses === 3) {
+          message = "You were bound to get one eventually. ";
+        }
+        else if (numberPlayerMisses >= 4) {
+          message = "Glad you finally hit one, loser. ";
+        }
+      }
+      numberPlayerMisses = 0;
+      message += "You sunk my "+shipName+"!";
     }
     // Hit or miss
     else {
       var isHit = result.shot.get('isHit');
-      message = "You " + (isHit)? "hit a ship!": "missed.";
+      var shipName = result.sunkShip.get('type');
+
+      if (isHit) {
+        
+        numberPlayerHits++;
+        if (numberPlayerHits === 2) {
+          message = "Two hits in a row means nothing, fool.";
+        } 
+        else if (numberPlayerHits === 3) {
+          message = "Impressive. Three hits in a row. ";
+        }
+        else if (numberPlayerHits >= 4) {
+          message = "This is unfair, you must be cheating. ";
+        } 
+        else {
+          if (numberPlayerMisses === 2) {
+            message = "Guess that wasn't much of a losing streak";
+          } 
+          else if (numberPlayerMisses === 3) {
+            message = "You were bound to get one eventually.";
+          }
+          else if (numberPlayerMisses >= 4) {
+            message = "Glad you finally hit one, loser.";
+          }
+        }
+        numberPlayerMisses = 0;
+
+      } else {
+        numberPlayerMisses++;
+        
+        if (numberPlayerMisses === 2) {
+          message = "Two misses isn't so bad";
+        } 
+        else if (numberPlayerMisses === 3) {
+          message = "Jeeze man, its kinda hard to be this terrible.";
+        }
+        else if (numberPlayerMisses >= 4) {
+          message = "Prepare to lose, silly human.";
+        }
+        else {
+          if (numberPlayerHits === 2) {
+            message = "Told you it was nothing. Prepare to lose.";
+          } 
+          else if (numberPlayerHits === 3) {
+            message = "Wow, glad that's over, it's my turn now.";
+          }
+          else if (numberPlayerHits >= 4) {
+            message = "The end of an era. I'm barely hanging on.";
+          }
+        }
+        numberPlayerHits = 0;
+      }
     }
     console.log(message)
     generateSpeech(message);
@@ -280,12 +360,46 @@ var registerCpuShot = function(playerResponse) {
   // Sunk ship
   else if (result.sunkShip) {
     var shipName = result.sunkShip.get('type');
-    message = "I sunk your "+shipName+"!";
+    numberCPUHits++;
+    numberCPUMisses = 0;
+    if (numberCPUHits === 2) {
+      message = "Heating up! That's two in a row";
+    } 
+    else if (numberCPUHits === 3) {
+      message = "Heck yeah, I'm on fire.";
+    }
+    message += "I sunk your "+shipName+"!";
   }
   // Hit or miss
   else {
     var isHit = result.shot.get('isHit');
-    message = "Great, that's a hit";
+    if (isHit) {
+      var shipName = result.sunkShip.get('type');
+      numberCPUMisses = 0;
+      numberCPUHits++;
+      if (numberCPUHits === 2) {
+        message = "Heating up! That's two hits in a row";
+      } 
+      else if (numberCPUHits === 3) {
+        message = "Heck yeah, I'm on fire. Three hits in a row";
+      }
+      else if (numberCPUHits >= 4) {
+        message = "I'm gonna beat you so fast at this rate";
+      }
+    } else {
+      var shipName = result.sunkShip.get('type');
+      numberCPUMisses++;
+      numberCPUHits = 0;
+      if (numberCPUMisses === 2) {
+        message = "I missed twice in a row? Wow.";
+      } 
+      else if (numberCPUMisses === 3) {
+        message = "Wow I suck at this, three times in a row.";
+      }
+      else if (numberCPUMisses >= 4) {
+        message = "Haven't you won yet? It can't get much worse for me.";
+      }
+    }
   }
   console.log(message);
   generateSpeech(message);
