@@ -66,6 +66,12 @@ Leap.loop({ hand: function(hand) {
 
   // SETUP mode
   if (gameState.get('state') == 'setup') {
+    numberCPUMisses = 0;
+    numberCPUHits = 0;
+
+    numberPlayerMisses = 0;
+    numberPlayerHits = 0;
+
     background.setContent("<h1>battleship</h1><h3 style='color: #7CD3A2;'>deploy ships</h3>");
     // 4.2, Deploying ships
     // Enable the player to grab, move, rotate, and drop ships to deploy them
