@@ -389,16 +389,19 @@ var registerCpuShot = function(playerResponse) {
         var position = cpuShot.get('position');
         highlightTile(position, Colors.RED);
       break;
+      case "game over":
+        message += "It's not game over yet. "
+      break;
       default:
     }
     var shipName = result.sunkShip.get('type');
     numberCPUHits++;
     numberCPUMisses = 0;
     if (numberCPUHits === 2) {
-      message = "Heating up! That's two in a row ";
+      message += "Heating up! That's two in a row ";
     } 
     else if (numberCPUHits === 3) {
-      message = "Heck yeah, I'm on fire. ";
+      message += "Heck yeah, I'm on fire. ";
     }
     message += "I sunk your "+shipName+"!";
   }
@@ -408,9 +411,13 @@ var registerCpuShot = function(playerResponse) {
     if (isHit) {
       switch (playerResponse) {
         case "miss":
-          message += "What? You can't lie to me, I know I hit that ship. "
-          var position = cpuShot.get('position');
-          highlightTile(position, Colors.RED);
+          message += "What? You can't lie to me, I know I hit that ship. ";
+        break;
+        case "sunk":
+          message += "I didn't sink your ship fool. ";
+        break;
+        case "game over":
+          message += "It's not game over yet. ";
         break;
         default:
       }
@@ -440,6 +447,18 @@ var registerCpuShot = function(playerResponse) {
         }
       }
     } else {
+      switch (playerResponse) {
+        case "hit":
+          message += "What? I didn't hit anything. ";
+        break;
+        case "sunk":
+          message += "I didn't sink your ship fool. ";
+        break;
+        case "game over":
+          message += "It's not game over yet. ";
+        break;
+        default:
+      }
       numberCPUMisses++;
       numberCPUHits = 0;
       if (numberCPUMisses === 2) {
