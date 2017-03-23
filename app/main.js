@@ -161,10 +161,15 @@ var processSpeech = function(transcript) {
   // Helper function to detect if any commands appear in a string
   var userSaid = function(str, commands) {
     for (var i = 0; i < commands.length; i++) {
-      if (str.indexOf(commands[i]) > -1)
-        playerResponse = commands[i];
+      if (str.indexOf(commands[i]) > -1) {
+        var command = commands[i]
+        playerResponse = command.toLowerCase();
+        console.log("command changed to " + playerResponse);
         return true;
+      }
     }
+    console.log("command changed to empty string");
+    playerResponse = "";
     return false;
   };
   console.log("processing");
@@ -194,7 +199,7 @@ var processSpeech = function(transcript) {
       // TODO: 4.5, CPU's turn
       // Detect the player's response to the CPU's shot: hit, miss, you sunk my ..., game over
       // and register the CPU's shot if it was said
-      if (userSaid(transcript, ["hit", "miss", "sunk", "game over"])) {
+      if (userSaid(transcript, ["hit", "miss", "sunk", "game over", "Miss"])) {
         registerCpuShot(playerResponse);
         processed = true;
       }
