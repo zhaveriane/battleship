@@ -262,7 +262,6 @@ var registerPlayerShot = function() {
     // Hit or miss
     else {
       var isHit = result.shot.get('isHit');
-      var shipName = result.sunkShip.get('type');
 
       if (isHit) {
         
@@ -386,7 +385,6 @@ var registerCpuShot = function(playerResponse) {
   else {
     var isHit = result.shot.get('isHit');
     if (isHit) {
-      var shipName = result.sunkShip.get('type');
       numberCPUMisses = 0;
       numberCPUHits++;
       if (numberCPUHits === 2) {
@@ -413,7 +411,6 @@ var registerCpuShot = function(playerResponse) {
         }
       }
     } else {
-      var shipName = result.sunkShip.get('type');
       numberCPUMisses++;
       numberCPUHits = 0;
       if (numberCPUMisses === 2) {
