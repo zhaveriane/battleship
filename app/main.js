@@ -182,7 +182,7 @@ var processSpeech = function(transcript) {
     if (gameState.isPlayerTurn()) {
       // TODO: 4.4, Player's turn
       // Detect the 'fire' command, and register the shot if it was said
-      if (userSaid(transcript, ["fire", "I are", "iron"])) {
+      if (userSaid(transcript, ["fire"])) {
         console.log("fire");
         registerPlayerShot();
 
@@ -263,8 +263,6 @@ var registerPlayerShot = function() {
     // Hit or miss
     else {
       var isHit = result.shot.get('isHit');
-      var shipName = result.sunkShip.get('type');
-
       if (isHit) {
         
         numberPlayerHits++;
