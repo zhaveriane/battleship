@@ -46,6 +46,8 @@ var numberCPUHits = 0;
 var numberPlayerMisses = 0;
 var numberPlayerHits = 0;
 
+var playerResponse = "";
+
 // MAIN GAME LOOP
 // Called every time the Leap provides a new frame of data
 Leap.loop({ hand: function(hand) {
@@ -61,7 +63,7 @@ Leap.loop({ hand: function(hand) {
   // Get the tile that the player is currently selecting, and highlight it
   selectedTile = getIntersectingTile(cursorPosition);
   if (selectedTile) {
-    highlightTile(selectedTile, "#fffda3");
+    highlightTile(selectedTile, Colors.GREEN);
   }
 
   // SETUP mode
@@ -160,6 +162,7 @@ var processSpeech = function(transcript) {
   var userSaid = function(str, commands) {
     for (var i = 0; i < commands.length; i++) {
       if (str.indexOf(commands[i]) > -1)
+        playerResponse = commands[i];
         return true;
     }
     return false;
@@ -169,7 +172,7 @@ var processSpeech = function(transcript) {
   if (gameState.get('state') == 'setup') {
     // TODO: 4.3, Starting the game with speech
     // Detect the 'start' command, and start the game if it was said
-    if (userSaid(transcript, ["start"])) {
+    if (userSaid(transcript, ["start", "star"])) {
       gameState.startGame();
       processed = true;
     }
@@ -192,9 +195,7 @@ var processSpeech = function(transcript) {
       // Detect the player's response to the CPU's shot: hit, miss, you sunk my ..., game over
       // and register the CPU's shot if it was said
       if (userSaid(transcript, ["hit", "miss", "sunk", "game over"])) {
-        var response = "playerResponse";
-        registerCpuShot(response);
-
+        registerCpuShot(playerResponse);
         processed = true;
       }
     }
@@ -363,6 +364,14 @@ var registerCpuShot = function(playerResponse) {
   // TODO: Generate CPU feedback in three cases
   // Game over
   if (result.isGameOver) {
+    switch (playerResponse) {
+      case "miss":
+        message += "What? You can't lie to me, I know I hit that ship. "
+        var position = cpuShot.get('position');
+        highlightTile(position, Colors.RED);
+      break;
+      default:
+    }
     gameState.endGame("cpu");
     message = "Better luck next time, I win";
     console.log(message);
@@ -371,14 +380,22 @@ var registerCpuShot = function(playerResponse) {
   }
   // Sunk ship
   else if (result.sunkShip) {
+    switch (playerResponse) {
+      case "miss":
+        message += "What? You can't lie to me, I know I hit that ship. "
+        var position = cpuShot.get('position');
+        highlightTile(position, Colors.RED);
+      break;
+      default:
+    }
     var shipName = result.sunkShip.get('type');
     numberCPUHits++;
     numberCPUMisses = 0;
     if (numberCPUHits === 2) {
-      message = "Heating up! That's two in a row";
+      message = "Heating up! That's two in a row ";
     } 
     else if (numberCPUHits === 3) {
-      message = "Heck yeah, I'm on fire.";
+      message = "Heck yeah, I'm on fire. ";
     }
     message += "I sunk your "+shipName+"!";
   }
@@ -386,34 +403,40 @@ var registerCpuShot = function(playerResponse) {
   else {
     var isHit = result.shot.get('isHit');
     if (isHit) {
-      var shipName = result.sunkShip.get('type');
+      switch (playerResponse) {
+        case "miss":
+          message += "What? You can't lie to me, I know I hit that ship. "
+          var position = cpuShot.get('position');
+          highlightTile(position, Colors.RED);
+        break;
+        default:
+      }
       numberCPUMisses = 0;
       numberCPUHits++;
       if (numberCPUHits === 2) {
-        message = "Heating up! That's two hits in a row";
+        message += "Heating up! That's two hits in a row";
       } 
       else if (numberCPUHits === 3) {
-        message = "Heck yeah, I'm on fire. Three hits in a row";
+        message += "Heck yeah, I'm on fire. Three hits in a row";
       }
       else if (numberCPUHits >= 4) {
-        message = "I'm gonna beat you so fast at this rate";
+        message += "I'm gonna beat you so fast at this rate";
       }
       else {
         if (numberCPUMisses === 2) {
-          message = "This is the start of something great. I'm gonna go on a run.";
+          message += "This is the start of something great. I'm gonna go on a run.";
         } 
         else if (numberCPUMisses === 3) {
-          message = "Okay, I can still come back from this.";
+          message += "Okay, I can still come back from this.";
         }
         else if (numberCPUMisses >= 4) {
-          message = "I'm down, but not out!";
+          message += "I'm down, but not out!";
         }
         else {
-          message = "You bet I hit something, there's more where that came from.";
+          message += "You bet I hit something, there's more where that came from.";
         }
       }
     } else {
-      var shipName = result.sunkShip.get('type');
       numberCPUMisses++;
       numberCPUHits = 0;
       if (numberCPUMisses === 2) {
