@@ -47,6 +47,7 @@ var numberPlayerMisses = 0;
 var numberPlayerHits = 0;
 
 var playerResponse = "";
+var numberLies = 0;
 
 // MAIN GAME LOOP
 // Called every time the Leap provides a new frame of data
@@ -168,11 +169,11 @@ var processSpeech = function(transcript) {
         return true;
       }
     }
-    console.log("command changed to empty string");
+    // console.log("command changed to empty string");
     playerResponse = "";
     return false;
   };
-  console.log("processing");
+  // console.log("processing");
   var processed = false;
   if (gameState.get('state') == 'setup') {
     // TODO: 4.3, Starting the game with speech
@@ -188,7 +189,6 @@ var processSpeech = function(transcript) {
       // TODO: 4.4, Player's turn
       // Detect the 'fire' command, and register the shot if it was said
       if (userSaid(transcript, ["fire"])) {
-        console.log("fire");
         registerPlayerShot();
 
         processed = true;
@@ -202,6 +202,7 @@ var processSpeech = function(transcript) {
       if (userSaid(transcript, ["hit", "miss", "sunk", "game over", "Miss"])) {
         registerCpuShot(playerResponse);
         processed = true;
+        playerResponse = "";
       }
     }
   }
@@ -212,6 +213,7 @@ var processSpeech = function(transcript) {
 // TODO: 4.4, Player's turn
 // Generate CPU speech feedback when player takes a shot
 var registerPlayerShot = function() {
+  console.log("register player shot");
   // TODO: CPU should respond if the shot was off-board
   var message = "";
   if (!selectedTile) {
@@ -356,16 +358,112 @@ var generateCpuShot = function() {
 // Generate CPU speech in response to the player's response
 // E.g. CPU takes shot, then player responds with "hit" ==> CPU could then say "AWESOME!"
 var registerCpuShot = function(playerResponse) {
+  console.log("register cpu shot");
   // Cancel any blinking
   unblinkTiles();
   var result = playerBoard.fireShot(cpuShot);
   var message = "";
 
+  // 4.6 Allow player to lie up to 2 times
+  if (numberLies < 3) {
+    switch (playerResponse) {
+      case "game over":
+        if (!result.isGameOver) {
+          numberLies = 2;
+        }
+        break;
+      case "sunk":
+        if (!result.sunkShip) {
+          numberLies++;
+        }
+        numberCPUHits++;
+        numberCPUMisses = 0;
+        if (numberCPUHits === 2) {
+          message += "Heating up! That's two in a row ";
+        } 
+        else if (numberCPUHits === 3) {
+          message += "Heck yeah, I'm on fire. ";
+        }
+        message += "I sunk your ship!";
+        break;
+      case "hit":
+        if (!result.shot.get('isHit')) {
+          numberLies++;
+        }
+        numberCPUMisses = 0;
+        numberCPUHits++;
+        if (numberCPUHits === 2) {
+          message += "Heating up! That's two hits in a row";
+        } 
+        else if (numberCPUHits === 3) {
+          message += "Heck yeah, I'm on fire. Three hits in a row";
+        }
+        else if (numberCPUHits >= 4) {
+          message += "I'm gonna beat you so fast at this rate";
+        }
+        else {
+          if (numberCPUMisses === 2) {
+            message += "This is the start of something great. I'm gonna go on a run.";
+          } 
+          else if (numberCPUMisses === 3) {
+            message += "Okay, I can still come back from this.";
+          }
+          else if (numberCPUMisses >= 4) {
+            message += "I'm down, but not out!";
+          }
+          else {
+            message += "You bet I hit something, there's more where that came from.";
+          }
+        }
+        break;
+      case "miss":
+        if (result.shot.get('isHit')) {
+          numberLies++;
+        }
+        numberCPUMisses++;
+        numberCPUHits = 0;
+        if (numberCPUMisses === 2) {
+          message = "I missed twice in a row? Wow.";
+        } 
+        else if (numberCPUMisses === 3) {
+          message = "Wow I suck at this, three times in a row.";
+        }
+        else if (numberCPUMisses >= 4) {
+          message = "Haven't you won yet? It can't get much worse for me.";
+        }
+        else {
+          if (numberCPUHits === 2) {
+            message = "I had a good streak.";
+          } 
+          else if (numberCPUHits === 3) {
+            message = "I was bound to miss eventually.";
+          }
+          else if (numberCPUHits >= 4) {
+            message = "OK, I missed, but you're totally gonna lose.";
+          }
+          else {
+            message = "Happens, I'll get it next time.";
+          }
+        }
+        break;
+      default:
+    }
+    if (numberLies === 2) {
+      message += "You've definitely been lying to me. I'll be checking up on you. ";
+      numberLies++;
+    }
+
+    console.log(message);
+    generateSpeech(message);
+
+    if (!result.isGameOver) {
+      nextTurn();
+    }
+    return;
+  }
+
   // NOTE: Here we are using the actual result of the shot, rather than the player's response
   // In 4.6, you may experiment with the CPU's response when the player is not being truthful!
-
-  // TODO: Generate CPU feedback in three cases
-  // Game over
   if (result.isGameOver) {
     switch (playerResponse) {
       case "miss":
@@ -462,26 +560,26 @@ var registerCpuShot = function(playerResponse) {
       numberCPUMisses++;
       numberCPUHits = 0;
       if (numberCPUMisses === 2) {
-        message = "I missed twice in a row? Wow.";
+        message += "I missed twice in a row? Wow.";
       } 
       else if (numberCPUMisses === 3) {
-        message = "Wow I suck at this, three times in a row.";
+        message += "Wow I suck at this, three times in a row.";
       }
       else if (numberCPUMisses >= 4) {
-        message = "Haven't you won yet? It can't get much worse for me.";
+        message += "Haven't you won yet? It can't get much worse for me.";
       }
       else {
         if (numberCPUHits === 2) {
-          message = "I had a good streak.";
+          message += "I had a good streak.";
         } 
         else if (numberCPUHits === 3) {
-          message = "I was bound to miss eventually.";
+          message += "I was bound to miss eventually.";
         }
         else if (numberCPUHits >= 4) {
-          message = "OK, I missed, but you're totally gonna lose.";
+          message += "OK, I missed, but you're totally gonna lose.";
         }
         else {
-          message = "Happens, I'll get it next time.";
+          message += "Happens, I'll get it next time.";
         }
       }
     }
