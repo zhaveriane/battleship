@@ -5,6 +5,8 @@ var cpuBoard = new Board({autoDeploy: true, name: "cpu"});
 var playerBoard = new Board({autoDeploy: SKIPSETUP, name: "player"});
 var cursor = new Cursor();
 
+var isRightHand = 1; // -1 if left hand
+
 // UI SETUP
 setupUserInterface();
 // Map Leap Motion coordinates to battleship
@@ -31,14 +33,35 @@ var selectedTile = false;
 // grabbedShip/Offset: The ship and offset if player is currently manipulating a ship
 var grabbedShip = false;
 var grabbedOffset = [0, 0];
-// var grabbedRollOffset = 0;
-// var getShipRotation = function(roll) {
-//   return -(roll-grabbedRollOffset);
-// }
+var grabs = [];
 
 // isGrabbing: Is the player's hand currently in a grabbing pose
 var isGrabbing = false;
 var grabThreshold = 0.9;
+var shipRotation = function(handroll) {
+  var roll = handroll*1.5;
+  if (roll > 0) {
+    roll = 0;
+  } else if (roll < -Math.PI/2) {
+    roll = -Math.PI/2;
+  }
+  return -roll;
+}
+var handrolls = [];
+
+// Smoothing
+var add = function(a, b) {
+    return a + b;
+}
+var smooth = function(list, w) {
+  if (w === 0) {
+    return list[list.length - 1];
+  }
+  var n = Math.min(w, list.length);
+  var arr = list.slice(list.length-n);
+  var sum = arr.reduce(add, 0);
+  return sum / n;
+}
 
 var numberCPUMisses = 0;
 var numberCPUHits = 0;
@@ -52,6 +75,11 @@ var numberLies = 0;
 // MAIN GAME LOOP
 // Called every time the Leap provides a new frame of data
 Leap.loop({ hand: function(hand) {
+  if (hand.isRight) {
+    isRightHand = 1;
+  } else {
+    isRightHand = -1;
+  }
   // Clear any highlighting at the beginning of the loop
   unhighlightTiles();
 
@@ -80,23 +108,21 @@ Leap.loop({ hand: function(hand) {
     // Enable the player to grab, move, rotate, and drop ships to deploy them
 
     // First, determine if grabbing pose or not
-    isGrabbing = hand.grabStrength > grabThreshold;
+    grabs.push(hand.grabStrength);
+    isGrabbing = smooth(grabs, 5) > grabThreshold;
 
     // Grabbing, but no selected ship yet. Look for one.
     // Update grabbedShip/grabbedOffset if the user is hovering over a ship
     if (!grabbedShip && isGrabbing) {
       grabbedShip = getIntersectingShipAndOffset(cursorPosition);
-      // if (grabbedShip) {
-      //   grabbedRollOffset = hand.roll() + grabbedShip.getShipRotation();
-      //   console.log("roll offset: " + grabbedRollOffset);
-      // }
     }
 
     // Has selected a ship and is still holding it
     // Move the ship
     else if (grabbedShip && isGrabbing) {
       grabbedShip.ship.setScreenPosition([cursorPosition[0]-grabbedShip.offset[0], cursorPosition[1]-grabbedShip.offset[1]]);
-      grabbedShip.ship.setScreenRotation(-hand.roll());
+      handrolls.push(hand.roll());
+      grabbedShip.ship.setScreenRotation(shipRotation(smooth(handrolls, 5)));
     }
 
     // Finished moving a ship. Release it, and try placing it.
